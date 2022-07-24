@@ -11,11 +11,11 @@ formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 streamHandler.setFormatter(formatter)
 
-logging.getLogger('wsgidav').addHandler(streamHandler)
+# logging.getLogger('wsgidav').addHandler(streamHandler)
 
 logger = logging.getLogger('aliyundrive-dav')
 logger.addHandler(streamHandler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 config = {
     "host": "127.0.0.1",
