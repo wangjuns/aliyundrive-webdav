@@ -37,9 +37,10 @@ tar -cvf video.mp4.tar --owner=0 --group=0 video.mp4
 
 ```py
 # {modeName}_check.py 文件模板。必须有
-# 1. encryption_mode 加密模式名称（无需修改赋值encryption_mode的代码）
+# 1. encryption_mode 加密模式名称
 # 2. check 方法
 
+# encryption_mode 赋值代码通用，无修修改
 encryption_mode = (os.path.splitext(
     os.path.basename(__file__))[0]).rstrip('_check')
 
@@ -62,7 +63,7 @@ def check(file_item: FileItem) -> Optional[FileItem]:
 
 ```py
 # {modeName}.py 文件模板。必须有
-# 1. encryption_mode 加密模式名称（无需修改赋值encryption_mode的代码）
+# 1. encryption_mode 加密模式名称
 # 2. file_class 导出的类，这个类需要继承AliyunDriveFile
 
 class AliyunDriveTarfile(AliyunDriveFile):
@@ -75,6 +76,7 @@ class AliyunDriveTarfile(AliyunDriveFile):
 
     ...
 
+# encryption_mode 赋值代码通用，无修修改
 encryption_mode = os.path.splitext(os.path.basename(__file__))[0]
 file_class = AliyunDriveTarfile
 ```
