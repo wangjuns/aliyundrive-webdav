@@ -18,7 +18,7 @@ logger.addHandler(streamHandler)
 logger.setLevel(logging.INFO)
 
 config = {
-    "host": "127.0.0.1",
+    "host": "0.0.0.0",
     "port": 8080,
     # "http_authenticator": {},
     "simple_dc": {"user_mapping": {"*": True}},  # 匿名访问
