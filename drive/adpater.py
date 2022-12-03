@@ -14,7 +14,7 @@ logger = logging.getLogger('aliyundrive-dav')
 cache_dir = os.path.join(ROOT_DIR, 'cache')
 cache_path = os.path.join(cache_dir, 'data')
 
-class Cache():
+class AliyunDriveAdapter():
 
     def __init__(self) -> None:
         self.drive = AliyunDrive()

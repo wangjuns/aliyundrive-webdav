@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from drive.cache import Cache
+from drive.adpater import AliyunDriveAdapter
 from drive.model import FileItem
 from wsgidav import util
 from wsgidav.dav_provider import DAVCollection, DAVProvider
@@ -14,7 +14,7 @@ logger = logging.getLogger('aliyundrive-dav')
 class AliyunDriveProvider(DAVProvider):
     def __init__(self):
         super().__init__()
-        self.cache = Cache()
+        self.aliyunDrive = AliyunDriveAdapter()
 
     def is_readonly(self):
         return True
@@ -28,21 +28,21 @@ class AliyunDriveProvider(DAVProvider):
     def get_resource_inst(self, path: str, environ: dict):
         self._count_get_resource_inst += 1
         if path == '/':
-            return AliyunDriveFolder(path, environ, self.cache)
+            return AliyunDriveFolder(path, environ, self.aliyunDrive)
 
-        item = self.cache.get_item_by_path(path)
+        item = self.aliyunDrive.get_item_by_path(path)
         if item is None:
             return None
 
         if item.type == 'folder':
-            return AliyunDriveFolder(path, environ, self.cache, item)
+            return AliyunDriveFolder(path, environ, self.aliyunDrive, item)
 
-        return AliyunDriveFile(path, environ, self.cache, item)
+        return AliyunDriveFile(path, environ, self.aliyunDrive, item)
 
 
 class AliyunDriveFolder(DAVCollection):
 
-    def __init__(self, path, environ, cache: Cache, file_item: Optional[FileItem] = None):
+    def __init__(self, path, environ, cache: AliyunDriveAdapter, file_item: Optional[FileItem] = None):
         super().__init__(path, environ)
         self.cache = cache
         self.file_item = file_item

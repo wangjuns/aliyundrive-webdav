@@ -1,4 +1,4 @@
-from drive.cache import Cache
+from drive.adpater import AliyunDriveAdapter
 from drive.model import FileItem
 from wsgidav import util
 from wsgidav.dav_provider import DAVNonCollection
@@ -8,9 +8,9 @@ from dav.response_stream import ResponseStream
 
 class AliyunDriveFile(DAVNonCollection):
 
-    def __init__(self, path, environ, cache: Cache, file_item: FileItem):
+    def __init__(self, path, environ, aliyunDrive: AliyunDriveAdapter, file_item: FileItem):
         super().__init__(path, environ)
-        self.cache = cache
+        self.cache = aliyunDrive
         self.file_item = file_item
 
     def get_content_length(self):
