@@ -3,14 +3,12 @@ from typing import Optional
 
 from drive.cache import Cache
 from drive.model import FileItem
-from exts import get_ext_file_classes
 from wsgidav import util
 from wsgidav.dav_provider import DAVCollection, DAVProvider
 
 from dav.file import AliyunDriveFile
 
 logger = logging.getLogger('aliyundrive-dav')
-ext_file_classes = get_ext_file_classes()
 
 
 class AliyunDriveProvider(DAVProvider):
@@ -21,7 +19,13 @@ class AliyunDriveProvider(DAVProvider):
     def is_readonly(self):
         return True
 
-    def get_resource_inst(self, path, environ):
+    """
+    path:
+        root: /
+        folder: /movie/苏里南.全6集/
+        file: /movie/苏里南.全6集/01.NarcoSaints.2022.HD1080P.X264.AAC-YYDS.mp4
+    """
+    def get_resource_inst(self, path: str, environ: dict):
         self._count_get_resource_inst += 1
         if path == '/':
             return AliyunDriveFolder(path, environ, self.cache)
@@ -33,9 +37,7 @@ class AliyunDriveProvider(DAVProvider):
         if item.type == 'folder':
             return AliyunDriveFolder(path, environ, self.cache, item)
 
-        file_class = ext_file_classes.get(
-            item.encryption_mode, AliyunDriveFile)
-        return file_class(path, environ, self.cache, item)
+        return AliyunDriveFile(path, environ, self.cache, item)
 
 
 class AliyunDriveFolder(DAVCollection):
@@ -64,10 +66,8 @@ class AliyunDriveFolder(DAVCollection):
                 member_list.append(
                     AliyunDriveFolder(path, self.environ, self.cache, item))
             else:
-                file_class = ext_file_classes.get(
-                    item.encryption_mode, AliyunDriveFile)
-                member_list.append(
-                    file_class(path, self.environ, self.cache, item))
+                member_list.append(AliyunDriveFile(
+                    path, self.environ, self.cache, item))
 
         return member_list
 
