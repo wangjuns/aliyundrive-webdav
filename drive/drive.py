@@ -28,8 +28,15 @@ class AliyunDrive():
         if refresh_token:
             self.refresh_token = refresh_token
         else:
-            with open(refresh_token_path, 'r', encoding='utf8') as f:
-                self.refresh_token = f.read().strip()
+            refresh_token_env = os.getenv("REFRESH_TOKEN")
+            
+            assert refresh_token_env is not None, "Must set REFRESH_TOKEN env"
+            logger.info(f"using REFRESH_TOKEN ({refresh_token_env}) in os env")
+            with open(refresh_token_path, 'w', encoding='utf8') as f:
+                f.write(refresh_token_env)
+                f.flush()
+    
+            self.refresh_token = refresh_token_env
 
         self._count_request = 0
 

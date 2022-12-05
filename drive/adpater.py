@@ -23,7 +23,7 @@ class AliyunDriveAdapter():
         self.drive = AliyunDrive()
         self.lock = threading.Lock()
         self._load_cache()
-        atexit.register(self.close)
+        # atexit.register(self.close)
 
     def _load_cache(self):
         """
@@ -61,7 +61,7 @@ class AliyunDriveAdapter():
         if file_item is not None:
             return file_item
 
-        return self.get_file_id(path)
+        return self.get_file_item(path)
 
     def get_file_list_by_path(self, path: str) -> List[FileItem]:
         """
@@ -75,14 +75,14 @@ class AliyunDriveAdapter():
 
         item = self.readCache(path.rstrip("/"), "file_item")
         if item is None:
-            item = self.get_file_id(path)
+            item = self.get_file_item(path)
 
         if item is not None:
             return self._get_file_list(path, item.file_id)
+        else:
+            return []
 
-        return []
-
-    def get_file_id(self, path: str) -> FileItem:
+    def get_file_item(self, path: str) -> FileItem:
         file_item = self.readCache(path, "file_item")
         if file_item is not None:
             return file_item
