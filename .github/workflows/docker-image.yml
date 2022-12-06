@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --platform linux/arm64 --tag manasalu/webdav:$(date +%s)
+      run: docker build . --file Dockerfile_gh --platform linux/arm64 --tag manasalu/webdav:$(date +%s)
