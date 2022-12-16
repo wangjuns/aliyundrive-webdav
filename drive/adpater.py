@@ -1,4 +1,5 @@
 import atexit
+from datetime import datetime
 import json
 import logging
 import os
@@ -9,7 +10,7 @@ from typing import List, Optional
 from wsgidav import util
 
 from drive.drive import AliyunDrive
-from drive.model import FileItem
+from drive.model import FileItem, GetDownloadUrlResponse
 from util import ROOT_DIR
 
 logger = logging.getLogger('aliyundrive-dav')
@@ -130,5 +131,20 @@ class AliyunDriveAdapter():
         获取文件下载链接
         """
 
+        resp_in_cache: GetDownloadUrlResponse = self.readCache(file_id, "file_url")
+
+        if resp_in_cache is not None:
+            if resp_in_cache.expiration.timestamp() > datetime.now().timestamp() + 3600:
+                return self.get_file_url(resp_in_cache)
+
         resp = self.drive.get_file_download_url(file_id)
-        return resp.url
+        self.putCache(file_id, resp, "file_url")
+
+        logger.debug("resp %s" % resp)
+        return self.get_file_url(resp)
+
+    def get_file_url(self, resp: GetDownloadUrlResponse) -> str:
+        if resp.cdn_url is not None:
+            return resp.cdn_url
+        else:
+            return resp.url
