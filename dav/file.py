@@ -10,7 +10,7 @@ class AliyunDriveFile(DAVNonCollection):
 
     def __init__(self, path, environ, aliyunDrive: AliyunDriveAdapter, file_item: FileItem):
         super().__init__(path, environ)
-        self.cache = aliyunDrive
+        self.drive = aliyunDrive
         self.file_item = file_item
 
     def get_content_length(self):
@@ -35,5 +35,5 @@ class AliyunDriveFile(DAVNonCollection):
         return self.file_item.updated_at.timestamp()
 
     def get_content(self):
-        downurl = self.cache.get_downurl(self.file_item.file_id)
+        downurl = self.drive.get_downurl(self.file_item.file_id)
         return ResponseStream(downurl)

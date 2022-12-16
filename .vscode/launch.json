@@ -13,7 +13,10 @@
       "justMyCode": false,
       "env": {
         "REFRESH_TOKEN": "c0f5602cf959432787ad08728a9485e7"
-      }
+      },
+      "args": [
+        "--log=DEBUG"
+      ]
     }
   ]
 }

@@ -44,12 +44,15 @@ class AliyunDriveAdapter():
         return f'{group}.{key}' if group else key
 
     def readCache(self, key: str, group: Optional[str] = None):
-        with self.lock:
-            return self.cache.get(self._key(key, group))
+        obj = self.cache.get(self._key(key, group))
+        if obj is not None:
+            logger.debug("cache hitted. %s" % (self._key(key, group)))
+        else:
+            logger.debug("cache missing. %s" % (self._key(key, group)))
+        return obj
 
     def putCache(self, key: str, value, group: Optional[str] = None):
-        with self.lock:
-            self.cache.update({self._key(key, group): value})
+        self.cache.update({self._key(key, group): value})
 
     def get_item_by_path(self, path: str):
         """
@@ -78,9 +81,17 @@ class AliyunDriveAdapter():
             item = self.get_file_item(path)
 
         if item is not None:
-            return self._get_file_list(path, item.file_id)
+            items = self._get_file_list(path, item.file_id)
+
+            # put item into cache
+            self.put_items_in_cache(path, items)
+            return items
         else:
             return []
+
+    def put_items_in_cache(self, path: str, items: List[FileItem]):
+        for i in items:
+            self.putCache("%s/%s" % (path, i.name), i, "file_item")
 
     def get_file_item(self, path: str) -> FileItem:
         file_item = self.readCache(path, "file_item")
