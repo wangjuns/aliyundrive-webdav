@@ -1,10 +1,10 @@
 import atexit
-from datetime import datetime
 import json
 import logging
 import os
 import shelve
 import threading
+from datetime import datetime
 from typing import List, Optional
 
 from wsgidav import util
@@ -92,7 +92,7 @@ class AliyunDriveAdapter():
 
     def put_items_in_cache(self, path: str, items: List[FileItem]):
         for i in items:
-            self.putCache("%s/%s" % (path, i.name), i, "file_item")
+            self.putCache(f"{path}/{i.name}", i, "file_item")
 
     def get_file_item(self, path: str) -> FileItem:
         file_item = self.readCache(path, "file_item")
@@ -108,13 +108,13 @@ class AliyunDriveAdapter():
             if parent == '':
                 file_items = self._get_file_list('/', 'root')
             else:
-                t_path = "%s/%s" % (full_path, parent)
+                t_path = f"{full_path}/{parent}"
                 item: FileItem = next(x for x in file_items if x.name == parent)
                 file_items = self._get_file_list(t_path, item.file_id)
                 full_path = t_path
 
             for item in file_items:
-                self.putCache("%s/%s" % (full_path, item.name), item, "file_item")
+                self.putCache(f"{full_path}/{item.name}", item, "file_item")
 
         return self.readCache(path.rstrip('/'), "file_item")
 
