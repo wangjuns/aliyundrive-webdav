@@ -41,7 +41,7 @@ class AliyunDriveAdapter():
 
         uri_parent = util.get_uri_parent(path)
         if uri_parent is None:
-            return self._get_file_list('/', 'root')
+            return self._get_file_list('root')
 
         item = self.get_file_item(path)
 
