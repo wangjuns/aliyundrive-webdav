@@ -1,14 +1,11 @@
-import atexit
-import json
 import logging
 import os
-import shelve
-import threading
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from wsgidav import util
 
+from drive.cache import Cache
 from drive.drive import AliyunDrive
 from drive.model import FileItem, GetDownloadUrlResponse
 from util import ROOT_DIR
@@ -22,38 +19,8 @@ class AliyunDriveAdapter():
 
     def __init__(self) -> None:
         self.drive = AliyunDrive()
-        self.lock = threading.Lock()
-        self._load_cache()
+        self.cache = Cache()
         # atexit.register(self.close)
-
-    def _load_cache(self):
-        """
-        打开缓存文件流
-        """
-        if not os.path.exists(cache_dir):
-            os.mkdir(cache_dir)
-
-        self.cache = {}
-
-    def close(self):
-        """
-        关闭缓存文件流
-        """
-        self.cache.close()
-
-    def _key(self, key: str, group: Optional[str] = None):
-        return f'{group}.{key}' if group else key
-
-    def readCache(self, key: str, group: Optional[str] = None):
-        obj = self.cache.get(self._key(key, group))
-        if obj is not None:
-            logger.debug("cache hitted. %s" % (self._key(key, group)))
-        else:
-            logger.debug("cache missing. %s" % (self._key(key, group)))
-        return obj
-
-    def putCache(self, key: str, value, group: Optional[str] = None):
-        self.cache.update({self._key(key, group): value})
 
     def get_item_by_path(self, path: str):
         """
@@ -61,7 +28,7 @@ class AliyunDriveAdapter():
         """
         assert path.startswith('/') and path != '/'
 
-        file_item = self.readCache(path, "file_item")
+        file_item = self.cache.read(path, "file_item")
         if file_item is not None:
             return file_item
 
@@ -77,7 +44,7 @@ class AliyunDriveAdapter():
         if uri_parent is None:
             return self._get_file_list('/', 'root')
 
-        item = self.readCache(path.rstrip("/"), "file_item")
+        item = self.cache.read(path.rstrip("/"), "file_item")
         if item is None:
             item = self.get_file_item(path)
 
@@ -92,10 +59,10 @@ class AliyunDriveAdapter():
 
     def put_items_in_cache(self, path: str, items: List[FileItem]):
         for i in items:
-            self.putCache(f"{path}/{i.name}", i, "file_item")
+            self.cache.put(f"{path}/{i.name}", i, "file_item")
 
     def get_file_item(self, path: str) -> FileItem:
-        file_item = self.readCache(path, "file_item")
+        file_item = self.cache.read(path, "file_item")
         if file_item is not None:
             return file_item
 
@@ -114,31 +81,26 @@ class AliyunDriveAdapter():
                 full_path = t_path
 
             for item in file_items:
-                self.putCache(f"{full_path}/{item.name}", item, "file_item")
+                self.cache.put(f"{full_path}/{item.name}", item, "file_item")
 
-        return self.readCache(path.rstrip('/'), "file_item")
+        return self.cache.read(path.rstrip('/'), "file_item")
 
     def _get_file_list(self, path: str, file_id: str) -> List[FileItem]:
-        file_list = []
-
-        for item in self.drive.list_all_files(file_id):
-            file_list.append(item)
-
-        return file_list
+        return [x for x in self.drive.list_all_files(file_id)]
 
     def get_downurl(self, file_id: str) -> str:
         """
         获取文件下载链接
         """
 
-        resp_in_cache: GetDownloadUrlResponse = self.readCache(file_id, "file_url")
+        resp_in_cache: GetDownloadUrlResponse = self.cache.read(file_id, "file_url")
 
         if resp_in_cache is not None:
             if resp_in_cache.expiration.timestamp() > datetime.now().timestamp() + 3600:
                 return self.get_file_url(resp_in_cache)
 
         resp = self.drive.get_file_download_url(file_id)
-        self.putCache(file_id, resp, "file_url")
+        self.cache.put(file_id, resp, "file_url")
 
         logger.debug("resp %s" % resp)
         return self.get_file_url(resp)
