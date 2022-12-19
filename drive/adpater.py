@@ -9,10 +9,14 @@ from drive.cache import Cache
 from drive.drive import AliyunDrive
 from drive.model import FileItem, GetDownloadUrlResponse
 from util import ROOT_DIR
+from cachetools import cached, TTLCache, FIFOCache
 
 logger = logging.getLogger('aliyundrive-dav')
 cache_dir = os.path.join(ROOT_DIR, 'cache')
 cache_path = os.path.join(cache_dir, 'data')
+downurl_cache = TTLCache(maxsize=100000, ttl=3600)
+file_list_chache = TTLCache(maxsize=100000, ttl=36000)
+file_item_cache = FIFOCache(maxsize=100000)
 
 
 class AliyunDriveAdapter():
@@ -22,16 +26,11 @@ class AliyunDriveAdapter():
         self.cache = Cache()
         # atexit.register(self.close)
 
-    def get_item_by_path(self, path: str):
+    def get_item_by_path(self, path: str) -> FileItem:
         """
         根据路径获取file_item
         """
         assert path.startswith('/') and path != '/'
-
-        file_item = self.cache.read(path, "file_item")
-        if file_item is not None:
-            return file_item
-
         return self.get_file_item(path)
 
     def get_file_list_by_path(self, path: str) -> List[FileItem]:
@@ -44,66 +43,56 @@ class AliyunDriveAdapter():
         if uri_parent is None:
             return self._get_file_list('/', 'root')
 
-        item = self.cache.read(path.rstrip("/"), "file_item")
-        if item is None:
-            item = self.get_file_item(path)
+        item = self.get_file_item(path)
 
         if item is not None:
-            items = self._get_file_list(path, item.file_id)
-
-            # put item into cache
-            self.put_items_in_cache(path, items)
-            return items
+            return self._get_file_list(item.file_id)
         else:
             return []
+        
 
-    def put_items_in_cache(self, path: str, items: List[FileItem]):
-        for i in items:
-            self.cache.put(f"{path}/{i.name}", i, "file_item")
-
+    @cached(cache=file_item_cache)
     def get_file_item(self, path: str) -> FileItem:
-        file_item = self.cache.read(path, "file_item")
-        if file_item is not None:
-            return file_item
-
         parents = path.rstrip('/').split('/')
+        target = parents[-1]
         parents = parents[:-1]
 
         file_items = []
         full_path = ""
-        for parent in parents:
-            if parent == '':
-                file_items = self._get_file_list('/', 'root')
+        for name in parents:
+            if name == '':
+                file_items = self._get_file_list('root')
             else:
-                t_path = f"{full_path}/{parent}"
-                item: FileItem = next(x for x in file_items if x.name == parent)
-                file_items = self._get_file_list(t_path, item.file_id)
+                t_path = f"{full_path}/{name}"
+                item: FileItem = next(x for x in file_items if x.name == name)
+                assert item is not None
+                file_items = self._get_file_list(item.file_id)
                 full_path = t_path
 
-            for item in file_items:
-                self.cache.put(f"{full_path}/{item.name}", item, "file_item")
+        return next(x for x in file_items if x.name == target)
 
-        return self.cache.read(path.rstrip('/'), "file_item")
-
-    def _get_file_list(self, path: str, file_id: str) -> List[FileItem]:
+    @cached(cache=file_list_chache)
+    def _get_file_list(self, file_id: str) -> List[FileItem]:
         return [x for x in self.drive.list_all_files(file_id)]
 
     def get_downurl(self, file_id: str) -> str:
         """
         获取文件下载链接
         """
-
-        resp_in_cache: GetDownloadUrlResponse = self.cache.read(file_id, "file_url")
-
-        if resp_in_cache is not None:
-            if resp_in_cache.expiration.timestamp() > datetime.now().timestamp() + 3600:
-                return self.get_file_url(resp_in_cache)
-
-        resp = self.drive.get_file_download_url(file_id)
-        self.cache.put(file_id, resp, "file_url")
+        resp = self.get_downurl_with_cache(file_id)
+        if resp.expiration.timestamp() < datetime.now().timestamp() + 3600:
+            downurl_cache.pop(file_id)
+            resp = self.get_downurl_with_cache(file_id)
 
         logger.debug("resp %s" % resp)
         return self.get_file_url(resp)
+
+    @cached(cache=downurl_cache)
+    def get_downurl_with_cache(self, file_id: str) -> GetDownloadUrlResponse:
+        return self.get_downurl_without_cache(file_id)
+
+    def get_downurl_without_cache(self, file_id: str) -> GetDownloadUrlResponse:
+        return self.drive.get_file_download_url(file_id)
 
     def get_file_url(self, resp: GetDownloadUrlResponse) -> str:
         if resp.cdn_url is not None:

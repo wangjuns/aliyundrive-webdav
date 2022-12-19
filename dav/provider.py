@@ -25,7 +25,15 @@ class AliyunDriveProvider(DAVProvider):
         folder: /movie/苏里南.全6集/
         file: /movie/苏里南.全6集/01.NarcoSaints.2022.HD1080P.X264.AAC-YYDS.mp4
     """
+
     def get_resource_inst(self, path: str, environ: dict):
+        try:
+            return self.get_resource_inst0(path, environ)
+        except Exception as inst:
+            logger.error(inst.with_traceback())
+            return None
+
+    def get_resource_inst0(self, path: str, environ: dict):
         self._count_get_resource_inst += 1
         if path == '/':
             return AliyunDriveFolder(path, environ, self.aliyunDrive)
