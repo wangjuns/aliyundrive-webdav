@@ -95,6 +95,7 @@ class AliyunDriveAdapter():
 
     def get_file_url(self, resp: GetDownloadUrlResponse) -> str:
         if resp.cdn_url is not None:
+            logger.debug(f"using cdn url {resp.cdn_url}")
             return resp.cdn_url
         else:
             return resp.url
