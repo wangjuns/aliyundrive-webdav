@@ -15,7 +15,7 @@ logger = logging.getLogger('aliyundrive-dav')
 cache_dir = os.path.join(ROOT_DIR, 'cache')
 cache_path = os.path.join(cache_dir, 'data')
 downurl_cache = TTLCache(maxsize=100000, ttl=3600)
-file_list_chache = TTLCache(maxsize=100000, ttl=36000)
+file_list_cache = TTLCache(maxsize=100000, ttl=36000)
 file_item_cache = FIFOCache(maxsize=100000)
 
 
@@ -70,7 +70,7 @@ class AliyunDriveAdapter():
 
         return next(x for x in file_items if x.name == target)
 
-    @cached(cache=file_list_chache)
+    @cached(cache=file_list_cache)
     def _get_file_list(self, file_id: str) -> List[FileItem]:
         return [x for x in self.drive.list_all_files(file_id)]
 
