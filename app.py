@@ -4,7 +4,7 @@ import argparse
 
 from wsgidav.server.server_cli import _run_cheroot
 from wsgidav.wsgidav_app import WsgiDAVApp
-
+from logging.handlers import RotatingFileHandler
 from dav.provider import AliyunDriveProvider
 
 
@@ -13,7 +13,7 @@ parser.add_argument("--log", help='set log level', default='INFO')
 parser.add_argument("-t", help='set refresh token', default=None)
 args = parser.parse_args()
 
-streamHandler = logging.StreamHandler(sys.stdout)
+streamHandler = RotatingFileHandler("logs/webdav_app.log", maxBytes=1024*1024*50, backupCount=5)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 streamHandler.setFormatter(formatter)
 
