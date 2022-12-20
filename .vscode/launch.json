@@ -11,11 +11,11 @@
       "program": "app.py",
       "console": "integratedTerminal",
       "justMyCode": false,
-      "env": {
-        "REFRESH_TOKEN": "c0f5602cf959432787ad08728a9485e7"
-      },
+      "env": {},
       "args": [
-        "--log=DEBUG"
+        "--log=DEBUG",
+        "-t",
+        "c0f5602cf959432787ad08728a9485e7"
       ]
     }
   ]

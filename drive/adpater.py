@@ -21,8 +21,8 @@ file_item_cache = FIFOCache(maxsize=100000)
 
 class AliyunDriveAdapter():
 
-    def __init__(self) -> None:
-        self.drive = AliyunDrive()
+    def __init__(self, refresh_token: str) -> None:
+        self.drive = AliyunDrive(refresh_token=refresh_token)
         self.cache = Cache()
         # atexit.register(self.close)
 
@@ -49,7 +49,6 @@ class AliyunDriveAdapter():
             return self._get_file_list(item.file_id)
         else:
             return []
-        
 
     @cached(cache=file_item_cache)
     def get_file_item(self, path: str) -> FileItem:

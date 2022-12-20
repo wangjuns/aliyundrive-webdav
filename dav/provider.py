@@ -12,9 +12,9 @@ logger = logging.getLogger('aliyundrive-dav')
 
 
 class AliyunDriveProvider(DAVProvider):
-    def __init__(self):
+    def __init__(self, refresh_token: str):
         super().__init__()
-        self.aliyunDrive = AliyunDriveAdapter()
+        self.aliyunDrive = AliyunDriveAdapter(refresh_token=refresh_token)
 
     def is_readonly(self):
         return True
