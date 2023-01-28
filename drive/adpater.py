@@ -84,7 +84,7 @@ class AliyunDriveAdapter():
             resp = self.get_downurl_with_cache(file_id)
 
         logger.debug("resp %s" % resp)
-        return self.get_file_url(resp)
+        return resp.url
 
     @cached(cache=downurl_cache)
     def get_downurl_with_cache(self, file_id: str) -> GetDownloadUrlResponse:
@@ -92,10 +92,3 @@ class AliyunDriveAdapter():
 
     def get_downurl_without_cache(self, file_id: str) -> GetDownloadUrlResponse:
         return self.drive.get_file_download_url(file_id)
-
-    def get_file_url(self, resp: GetDownloadUrlResponse) -> str:
-        if resp.cdn_url is not None:
-            logger.debug(f"using cdn url {resp.cdn_url}")
-            return resp.cdn_url
-        else:
-            return resp.url
